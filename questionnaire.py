@@ -18,12 +18,60 @@
 #
 #    - lancer()
 #
+from json_file import JsonfileService
+
+"""type: soit choix soit réponse, l'utilisateur choisi entre des choix et des réponses """
+def demander_reponse_numerique_utlisateur(min, max, type):
+    reponse_str = input(f"Votre {type}(entre le {min} et {max}): ")
+    try:
+        reponse_int = int(reponse_str)
+        if min <= reponse_int <= max:
+            return reponse_int
+        print("ERREUR : Vous devez rentrer un nombre entre", min, "et", max)
+    except:
+        print("ERREUR : Veuillez rentrer uniquement des chiffres")
+    return demander_reponse_numerique_utlisateur(min, max, type)
+
+"""Fonction qui permet de lister des choix à partir des listes données puis renvoyer le choix """
+def lister_les_choix_et_renvoyer_le_choix_de_l_utilisateur(choix):
+    for i in range(0, len(choix)):
+        print(f"{i+1}- {choix[i]}")
+    choix_utilisateur = demander_reponse_numerique_utlisateur(1, len(choix), "choix")
+    return choix_utilisateur
+    
+"""
+Menu:
+données: les différents fichiers Json
+action: afficher et demander des choix et difficultés et renvoyer les questions
+"""
+class Menu:
+    def __init__(self):
+        self.json_file_service = JsonfileService()
+
+    def afficher_et_demander_choix_et_difficulte_et_renvoyer_les_questions(self):
+        print("+++++++++++++++++BIENVENU SUR LE JEUX QUESTIONNAIRE++++++++++++++++")
+        print("Choisir le thème:")
+        themes = self.json_file_service.file_json.get_themes()
+        choix_themes = lister_les_choix_et_renvoyer_le_choix_de_l_utilisateur(themes)
+
+        print("choisir le titre")
+        titres = self.json_file_service.file_json.get_titres_from_theme(themes[choix_themes-1])
+        choix_titre = lister_les_choix_et_renvoyer_le_choix_de_l_utilisateur(titres)
+
+        print("choisir la difficulté")
+        difficultes = ("débutant", "confirmé", "expert")
+        choix_difficulte = lister_les_choix_et_renvoyer_le_choix_de_l_utilisateur(difficultes)
+
+        questions = self.json_file_service.file_json.get_questions_from_theme_and_difficult_et_titre(themes[choix_themes-1],
+                                                                                                     titres[choix_titre-1],
+                                                                                                     difficultes[choix_difficulte-1])
+        return questions
+
 
 class Question:
-    def __init__(self, titre, choix, bonne_reponse):
+    def __init__(self, titre, choix):
         self.titre = titre
         self.choix = choix
-        self.bonne_reponse = bonne_reponse
 
     def FromData(data):
         # ....
@@ -34,12 +82,12 @@ class Question:
         print("QUESTION")
         print("  " + self.titre)
         for i in range(len(self.choix)):
-            print("  ", i+1, "-", self.choix[i])
+            print("  ", i+1, "-", self.choix[i][0])
 
         print()
         resultat_response_correcte = False
-        reponse_int = Question.demander_reponse_numerique_utlisateur(1, len(self.choix))
-        if self.choix[reponse_int-1].lower() == self.bonne_reponse.lower():
+        reponse_int = demander_reponse_numerique_utlisateur(1, len(self.choix), "reponse")
+        if self.choix[reponse_int-1][1] == True:
             print("Bonne réponse")
             resultat_response_correcte = True
         else:
@@ -47,18 +95,6 @@ class Question:
             
         print()
         return resultat_response_correcte
-
-    def demander_reponse_numerique_utlisateur(min, max):
-        reponse_str = input("Votre réponse (entre " + str(min) + " et " + str(max) + ") :")
-        try:
-            reponse_int = int(reponse_str)
-            if min <= reponse_int <= max:
-                return reponse_int
-
-            print("ERREUR : Vous devez rentrer un nombre entre", min, "et", max)
-        except:
-            print("ERREUR : Veuillez rentrer uniquement des chiffres")
-        return Question.demander_reponse_numerique_utlisateur(min, max)
     
 class Questionnaire:
     def __init__(self, questions):
@@ -66,34 +102,29 @@ class Questionnaire:
 
     def lancer(self):
         score = 0
-        for question in self.questions:
-            if question.poser():
+        for i in range(0, len(self.questions)):
+            print(f"Question n°{i+1} sur {len(self.questions)}")
+            if self.questions[i].poser():
                 score += 1
-        print("Score final :", score, "sur", len(self.questions))
         return score
 
-
-"""questionnaire = (
-    ("Quelle est la capitale de la France ?", ("Marseille", "Nice", "Paris", "Nantes", "Lille"), "Paris"), 
-    ("Quelle est la capitale de l'Italie ?", ("Rome", "Venise", "Pise", "Florence"), "Rome"),
-    ("Quelle est la capitale de la Belgique ?", ("Anvers", "Bruxelles", "Bruges", "Liège"), "Bruxelles")
-                )
-
-lancer_questionnaire(questionnaire)"""
-
-# q1 = Question("Quelle est la capitale de la France ?", ("Marseille", "Nice", "Paris", "Nantes", "Lille"), "Paris")
-# q1.poser()
 
 # data = (("Marseille", "Nice", "Paris", "Nantes", "Lille"), "Paris", "Quelle est la capitale de la France ?")
 # q = Question.FromData(data)
 # print(q.__dict__)
 
-Questionnaire(
-    (
-    Question("Quelle est la capitale de la France ?", ("Marseille", "Nice", "Paris", "Nantes", "Lille"), "Paris"), 
-    Question("Quelle est la capitale de l'Italie ?", ("Rome", "Venise", "Pise", "Florence"), "Rome"),
-    Question("Quelle est la capitale de la Belgique ?", ("Anvers", "Bruxelles", "Bruges", "Liège"), "Bruxelles")
-    )
-).lancer()
+while True:
+    questions = Menu().afficher_et_demander_choix_et_difficulte_et_renvoyer_les_questions()
+    object_question = []
+    for i in range(0, len(questions)):
+        object_question.append(Question(questions[i]["titre"], questions[i]["choix"]))
+    print("toto")
+    score = Questionnaire(object_question).lancer()
+    print(f"Score final: {score}/{len(object_question)}")
+    print("++++++++++VOULEZ VOUS CONTINUER++++++++++++")
+    print("1- oui\n2- Non")
+    choix = demander_reponse_numerique_utlisateur(1, 2, "choix")
+    if choix == 1:
+        break
 
 
