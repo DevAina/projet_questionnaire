@@ -16,8 +16,9 @@ class question_json:
     def load_file(self):
         try:
             file = open(self.filename, 'r')
-        except FileNotFoundError:
-            return
+        except:
+            print("Un problème au niveau de chargement du fichiers")
+            exit(0)
         else:
             read_file = file.read()
             file.close()
@@ -28,7 +29,7 @@ class question_json:
 Questions:
     -contient une liste de question_json
 
-    action: obtenir les différents thèmes, tiitres et question à partir du titre et thème et difficultés
+    action: obtenir les différents thèmes, titres et question à partir du titre et thème et difficultés
 """        
 class Questions:
     question_json =  (question_json("animaux_leschats_debutant.json"),
@@ -51,9 +52,11 @@ class Questions:
         themes = []
         for i in range(0, len(self.question_json)):
             theme = self.question_json[i].data["categorie"]
-            if not theme in themes:
-                themes.append(theme)
-        return themes
+            if not theme is None:
+                if not theme in themes:
+                    themes.append(theme)
+                return theme
+            return
     
     def get_titres_from_theme(self, theme):
         titres = []
