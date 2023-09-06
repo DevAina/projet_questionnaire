@@ -87,7 +87,7 @@ class Question:
         print()
         resultat_response_correcte = False
         reponse_int = demander_reponse_numerique_utlisateur(1, len(self.choix), "reponse")
-        if self.choix[reponse_int-1][1] == True:
+        if self.choix[reponse_int-1][1]:
             print("Bonne réponse")
             resultat_response_correcte = True
         else:
@@ -118,7 +118,6 @@ while True:
     object_question = []
     for i in range(0, len(questions)):
         object_question.append(Question(questions[i]["titre"], questions[i]["choix"]))
-    print("toto")
     score = Questionnaire(object_question).lancer()
     print(f"Score final: {score}/{len(object_question)}")
     print("++++++++++VOULEZ VOUS CONTINUER++++++++++++")
